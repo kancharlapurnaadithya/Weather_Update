@@ -1,0 +1,6 @@
+{
+  "name": "Weather Update Application",
+  "description": "Real-time weather update dashboard featuring OpenWeather API integration, city search, GPS geolocation, dynamic atmospheric themes, and detailed forecasts.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

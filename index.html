@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>India Weather Update</title>
+  <meta name="description" content="Accurate real-time weather update application for Indian states and cities." />
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Safe window.fetch getter/setter compatibility -->
+  <script>
+    (function () {
+      try {
+        if (typeof window !== 'undefined' && window.fetch) {
+          var _origFetch = window.fetch.bind(window);
+          var _currentFetch = _origFetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function () {
+              return _currentFetch;
+            },
+            set: function (newFetch) {
+              _currentFetch = newFetch;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        }
+      } catch (err) {
+        console.warn('Fetch setter compatibility warning:', err);
+      }
+    })();
+  </script>
+
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="theme-default">
+
+  <main class="weather-app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-group">
+        <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          <path d="M12 4v2"/>
+          <path d="m4.93 4.93 1.41 1.41"/>
+        </svg>
+        <div>
+          <h1 class="app-title">India Weather Update</h1>
+          <p class="app-subtitle">Real-time state & city weather (IST)</p>
+        </div>
+      </div>
+      <button type="button" id="apiKeyToggleBtn" class="btn-api-key" title="Configure OpenWeather API Key">
+        API Key
+      </button>
+    </header>
+
+    <!-- Optional OpenWeather API Key Section -->
+    <div id="apiKeySection" class="api-key-section hidden">
+      <div class="api-key-box">
+        <label for="apiKeyInput" class="api-key-label">OpenWeather API Key (Optional):</label>
+        <div class="api-key-row">
+          <input
+            type="text"
+            id="apiKeyInput"
+            class="api-key-input"
+            placeholder="Paste OpenWeather key (or leave empty for live feed)..."
+          />
+          <button type="button" id="saveApiKeyBtn" class="btn-save-key">Save</button>
+        </div>
+        <p class="api-key-hint">
+          Real-time weather for India is active. You can optionally add an OpenWeather API key.
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick State & City Selector -->
+    <div class="select-container">
+      <label for="stateCitySelect" class="select-label">Select Indian State / Major City:</label>
+      <div class="select-wrapper">
+        <select id="stateCitySelect" class="state-select" aria-label="Select Indian State or City">
+          <option value="" disabled selected>-- Select Indian State / City --</option>
+          <!-- Populated dynamically via JavaScript with all 28 states & 8 UTs -->
+        </select>
+      </div>
+    </div>
+
+    <!-- City Search Form -->
+    <form id="searchForm" class="search-form">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input
+          type="text"
+          id="cityInput"
+          class="city-input"
+          placeholder="Or type any Indian city (e.g. Hyderabad, Vijayawada, Mumbai)..."
+          autocomplete="off"
+          required
+        />
+      </div>
+      <div class="search-buttons">
+        <button type="submit" id="searchBtn" class="btn btn-search">
+          Search Weather
+        </button>
+        <button type="button" id="locationBtn" class="btn btn-location" title="Detect your current location in India">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+          </svg>
+          <span>My Location</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Quick Indian Hub Chips -->
+    <div class="quick-chips-wrapper" aria-label="Quick Indian cities">
+      <span class="chips-label">Quick:</span>
+      <div class="quick-chips">
+        <button type="button" class="chip-btn" data-city="Hyderabad">Hyderabad</button>
+        <button type="button" class="chip-btn" data-city="Vijayawada">Vijayawada</button>
+        <button type="button" class="chip-btn" data-city="Visakhapatnam">Vizag</button>
+        <button type="button" class="chip-btn" data-city="Delhi">Delhi</button>
+        <button type="button" class="chip-btn" data-city="Mumbai">Mumbai</button>
+        <button type="button" class="chip-btn" data-city="Bengaluru">Bengaluru</button>
+        <button type="button" class="chip-btn" data-city="Chennai">Chennai</button>
+        <button type="button" class="chip-btn" data-city="Kolkata">Kolkata</button>
+      </div>
+    </div>
+
+    <!-- Error / Notice Banner -->
+    <div id="errorBanner" class="error-banner hidden" role="alert">
+      <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="errorMessage" class="error-text">City not found.</span>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingIndicator" class="loading-indicator hidden">
+      <div class="spinner"></div>
+      <p>Fetching accurate Indian meteorological data...</p>
+    </div>
+
+    <!-- Main Weather Display Card -->
+    <section id="weatherCard" class="weather-card">
+      <div class="weather-main-info">
+        <div class="weather-icon-wrapper">
+          <img id="weatherIcon" class="weather-icon" src="" alt="Weather Icon" />
+        </div>
+        <div class="temperature-box">
+          <span id="temperature" class="temperature">--</span>
+          <span class="temp-unit">°C</span>
+        </div>
+        <div id="weatherCondition" class="weather-condition">Loading weather...</div>
+        <div class="location-box">
+          <svg class="location-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span id="cityName" class="city-name">Hyderabad, Telangana</span>
+        </div>
+        <div class="time-box">
+          <span id="currentTime" class="time-text">Indian Standard Time (IST)</span>
+        </div>
+      </div>
+
+      <!-- Temperature Range (Min / Max) -->
+      <div class="temp-range">
+        <span class="temp-label">Min:</span> <span id="tempMin">--°C</span>
+        <span class="divider">|</span>
+        <span class="temp-label">Max:</span> <span id="tempMax">--°C</span>
+      </div>
+
+      <!-- Weather Details (Feels Like, Humidity, Wind Speed) -->
+      <div class="weather-details-grid">
+        <div class="detail-item">
+          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>
+          </svg>
+          <div class="detail-text">
+            <span class="detail-label">Feels Like</span>
+            <span id="feelsLike" class="detail-value">--°C</span>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+          <div class="detail-text">
+            <span class="detail-label">Humidity</span>
+            <span id="humidity" class="detail-value">--%</span>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <svg class="detail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/>
+            <path d="M9.6 4.6A2 2 0 1 1 11 8H2"/>
+            <path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>
+          </svg>
+          <div class="detail-text">
+            <span class="detail-label">Wind Speed</span>
+            <span id="windSpeed" class="detail-value">-- m/s</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Note -->
+    <footer class="app-footer">
+      <span>Accurate Live Weather for all 28 States & 8 Union Territories of India</span>
+    </footer>
+  </main>
+
+  <!-- Vanilla JavaScript -->
+  <script src="./script.js"></script>
+</body>
+</html>
