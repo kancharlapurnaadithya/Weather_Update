@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>India Weather Update</title>
-  <meta name="description" content="Accurate real-time weather update application for Indian states and cities." />
+  <meta name="description" content="Simple and accurate real-time weather update application for Indian states and cities." />
   
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -50,41 +50,19 @@
           <path d="m4.93 4.93 1.41 1.41"/>
         </svg>
         <div>
-          <h1 class="app-title">India Weather Update</h1>
-          <p class="app-subtitle">Real-time state & city weather (IST)</p>
+          <h1 class="app-title">Weather Update</h1>
+          <p class="app-subtitle">Real-time Indian weather</p>
         </div>
       </div>
-      <button type="button" id="apiKeyToggleBtn" class="btn-api-key" title="Configure OpenWeather API Key">
-        API Key
-      </button>
     </header>
 
-    <!-- Optional OpenWeather API Key Section -->
-    <div id="apiKeySection" class="api-key-section hidden">
-      <div class="api-key-box">
-        <label for="apiKeyInput" class="api-key-label">OpenWeather API Key (Optional):</label>
-        <div class="api-key-row">
-          <input
-            type="text"
-            id="apiKeyInput"
-            class="api-key-input"
-            placeholder="Paste OpenWeather key (or leave empty for live feed)..."
-          />
-          <button type="button" id="saveApiKeyBtn" class="btn-save-key">Save</button>
-        </div>
-        <p class="api-key-hint">
-          Real-time weather for India is active. You can optionally add an OpenWeather API key.
-        </p>
-      </div>
-    </div>
-
-    <!-- Quick State & City Selector -->
+    <!-- State & City Quick Selector -->
     <div class="select-container">
-      <label for="stateCitySelect" class="select-label">Select Indian State / Major City:</label>
+      <label for="stateCitySelect" class="select-label">Select State / City:</label>
       <div class="select-wrapper">
         <select id="stateCitySelect" class="state-select" aria-label="Select Indian State or City">
-          <option value="" disabled selected>-- Select Indian State / City --</option>
-          <!-- Populated dynamically via JavaScript with all 28 states & 8 UTs -->
+          <option value="" disabled selected>-- Choose State or City --</option>
+          <!-- Populated dynamically via JavaScript -->
         </select>
       </div>
     </div>
@@ -100,16 +78,16 @@
           type="text"
           id="cityInput"
           class="city-input"
-          placeholder="Or type any Indian city (e.g. Hyderabad, Vijayawada, Mumbai)..."
+          placeholder="Or type city name (e.g. Hyderabad, Vijayawada)..."
           autocomplete="off"
           required
         />
       </div>
       <div class="search-buttons">
         <button type="submit" id="searchBtn" class="btn btn-search">
-          Search Weather
+          Search
         </button>
-        <button type="button" id="locationBtn" class="btn btn-location" title="Detect your current location in India">
+        <button type="button" id="locationBtn" class="btn btn-location" title="Use current location">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="3 11 22 2 13 21 11 13 3 11"/>
           </svg>
@@ -117,21 +95,6 @@
         </button>
       </div>
     </form>
-
-    <!-- Quick Indian Hub Chips -->
-    <div class="quick-chips-wrapper" aria-label="Quick Indian cities">
-      <span class="chips-label">Quick:</span>
-      <div class="quick-chips">
-        <button type="button" class="chip-btn" data-city="Hyderabad">Hyderabad</button>
-        <button type="button" class="chip-btn" data-city="Vijayawada">Vijayawada</button>
-        <button type="button" class="chip-btn" data-city="Visakhapatnam">Vizag</button>
-        <button type="button" class="chip-btn" data-city="Delhi">Delhi</button>
-        <button type="button" class="chip-btn" data-city="Mumbai">Mumbai</button>
-        <button type="button" class="chip-btn" data-city="Bengaluru">Bengaluru</button>
-        <button type="button" class="chip-btn" data-city="Chennai">Chennai</button>
-        <button type="button" class="chip-btn" data-city="Kolkata">Kolkata</button>
-      </div>
-    </div>
 
     <!-- Error / Notice Banner -->
     <div id="errorBanner" class="error-banner hidden" role="alert">
@@ -146,7 +109,7 @@
     <!-- Loading State -->
     <div id="loadingIndicator" class="loading-indicator hidden">
       <div class="spinner"></div>
-      <p>Fetching accurate Indian meteorological data...</p>
+      <p>Fetching weather information...</p>
     </div>
 
     <!-- Main Weather Display Card -->
@@ -214,11 +177,6 @@
         </div>
       </div>
     </section>
-
-    <!-- Footer Note -->
-    <footer class="app-footer">
-      <span>Accurate Live Weather for all 28 States & 8 Union Territories of India</span>
-    </footer>
   </main>
 
   <!-- Vanilla JavaScript -->

@@ -1,6 +1,6 @@
 /* ==========================================================================
-   India Weather Update Application - CSS3 Stylesheet
-   Modern, responsive card layout with beautiful atmospheric gradient backgrounds
+   Weather Update Application - Simple CSS3 Stylesheet
+   Clean, basic weather card model with beautiful gradient background
    ========================================================================== */
 
 /* --- CSS Variables --- */
@@ -8,13 +8,13 @@
   --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --color-text: #ffffff;
   --color-text-dim: #cbd5e1;
-  --color-card-bg: rgba(255, 255, 255, 0.12);
+  --color-card-bg: rgba(255, 255, 255, 0.14);
   --color-card-border: rgba(255, 255, 255, 0.22);
   --color-accent: #38bdf8;
   --color-accent-hover: #0284c7;
   --radius-card: 24px;
   --radius-btn: 12px;
-  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.32);
+  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.3);
   --transition-speed: 0.25s ease;
 }
 
@@ -67,10 +67,10 @@ body.theme-haze {
   background: linear-gradient(135deg, #4b5563 0%, #6b7280 50%, #9ca3af 100%);
 }
 
-/* --- Main Card --- */
+/* --- Main Weather Card --- */
 .weather-app {
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
   background: var(--color-card-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -88,8 +88,7 @@ body.theme-haze {
 .app-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: flex-start;
 }
 
 .brand-group {
@@ -117,94 +116,7 @@ body.theme-haze {
   color: var(--color-text-dim);
 }
 
-.btn-api-key {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid var(--color-card-border);
-  color: var(--color-text-dim);
-  font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition-speed);
-}
-
-.btn-api-key:hover {
-  background: rgba(255, 255, 255, 0.24);
-  color: var(--color-text);
-  transform: translateY(-1px);
-}
-
-/* --- Collapsible API Key Box --- */
-.api-key-section {
-  display: block;
-}
-
-.api-key-section.hidden {
-  display: none;
-}
-
-.api-key-box {
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid var(--color-card-border);
-  border-radius: var(--radius-btn);
-  padding: 0.875rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.api-key-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-dim);
-}
-
-.api-key-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.api-key-input {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid var(--color-card-border);
-  border-radius: 8px;
-  padding: 0.45rem 0.65rem;
-  color: #fff;
-  font-family: monospace;
-  font-size: 0.8125rem;
-  outline: none;
-}
-
-.api-key-input:focus {
-  border-color: var(--color-accent);
-}
-
-.btn-save-key {
-  background: var(--color-accent);
-  color: #0f172a;
-  border: none;
-  border-radius: 8px;
-  padding: 0.45rem 0.85rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-save-key:hover {
-  background: #7dd3fc;
-}
-
-.api-key-hint {
-  font-size: 0.7rem;
-  color: var(--color-text-dim);
-  line-height: 1.3;
-}
-
-/* --- Indian State Selector --- */
+/* --- State & City Selector --- */
 .select-container {
   display: flex;
   flex-direction: column;
@@ -350,55 +262,6 @@ body.theme-haze {
 .btn-icon {
   width: 16px;
   height: 16px;
-}
-
-/* --- Quick Chips --- */
-.quick-chips-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-  scrollbar-width: none;
-}
-
-.quick-chips-wrapper::-webkit-scrollbar {
-  display: none;
-}
-
-.chips-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.quick-chips {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.chip-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--color-card-border);
-  color: var(--color-text-dim);
-  font-family: inherit;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.28rem 0.65rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition-speed);
-}
-
-.chip-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  transform: translateY(-1px);
 }
 
 /* --- Error Banner --- */
@@ -605,15 +468,6 @@ body.theme-haze {
 .detail-value {
   font-size: 0.95rem;
   font-weight: 700;
-}
-
-/* --- Footer --- */
-.app-footer {
-  text-align: center;
-  font-size: 0.725rem;
-  color: var(--color-text-dim);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 0.85rem;
 }
 
 /* --- Keyframe Animations --- */

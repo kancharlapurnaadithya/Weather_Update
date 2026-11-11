@@ -4,8 +4,8 @@
  * Clean, lightweight vanilla JavaScript designed specifically for
  * Indian States, Union Territories, and Cities.
  *
- * Guarantees accurate real-time meteorological data across India using
- * Indian Standard Time (IST) and India-filtered geocoding.
+ * Direct real-time meteorological feed with Indian Standard Time (IST).
+ * No API key required.
  */
 
 // =============================================================================
@@ -135,13 +135,7 @@ const INDIA_LOCATIONS = [
 ];
 
 // =============================================================================
-// 2. Configuration & State
-// =============================================================================
-
-let openWeatherApiKey = localStorage.getItem('openweather_api_key') || '';
-
-// =============================================================================
-// 3. DOM Elements
+// 2. DOM Elements
 // =============================================================================
 
 const stateCitySelect = document.getElementById('stateCitySelect');
@@ -153,7 +147,7 @@ const errorBanner = document.getElementById('errorBanner');
 const errorMessage = document.getElementById('errorMessage');
 const loadingIndicator = document.getElementById('loadingIndicator');
 
-// Weather fields
+// Weather display fields
 const weatherIcon = document.getElementById('weatherIcon');
 const temperature = document.getElementById('temperature');
 const weatherCondition = document.getElementById('weatherCondition');
@@ -165,35 +159,25 @@ const feelsLike = document.getElementById('feelsLike');
 const humidity = document.getElementById('humidity');
 const windSpeed = document.getElementById('windSpeed');
 
-// API Key UI
-const apiKeyToggleBtn = document.getElementById('apiKeyToggleBtn');
-const apiKeySection = document.getElementById('apiKeySection');
-const apiKeyInput = document.getElementById('apiKeyInput');
-const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
-
-// Quick City Buttons
-const quickChipBtns = document.querySelectorAll('.chip-btn');
-
 // =============================================================================
-// 4. Initialization
+// 3. Initialization
 // =============================================================================
 
 function initializeApp() {
   populateStateDropdown();
   setupEventListeners();
 
-  // Load Hyderabad, Telangana by default as initial view
+  // Load Hyderabad, Telangana by default on launch
   const defaultLocation = INDIA_LOCATIONS.find((l) => l.city.includes('Hyderabad')) || INDIA_LOCATIONS[0];
-  loadWeatherForLocation(defaultLocation);
+  fetchAccurateIndianWeather(defaultLocation);
 }
 
 /**
- * Populate Indian States & Cities Dropdown grouped by state
+ * Populate Indian States & Cities Dropdown
  */
 function populateStateDropdown() {
   if (!stateCitySelect) return;
 
-  // Group locations by Indian State
   const stateGroups = {};
   INDIA_LOCATIONS.forEach((loc, index) => {
     if (!stateGroups[loc.state]) {
@@ -222,7 +206,7 @@ function setupEventListeners() {
   stateCitySelect.addEventListener('change', (e) => {
     const selectedIdx = parseInt(e.target.value, 10);
     if (!isNaN(selectedIdx) && INDIA_LOCATIONS[selectedIdx]) {
-      loadWeatherForLocation(INDIA_LOCATIONS[selectedIdx]);
+      fetchAccurateIndianWeather(INDIA_LOCATIONS[selectedIdx]);
     }
   });
 
@@ -237,44 +221,16 @@ function setupEventListeners() {
 
   // Geolocation button
   locationBtn.addEventListener('click', handleCurrentLocation);
-
-  // Quick Chips
-  quickChipBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const targetCity = btn.dataset.city;
-      cityInput.value = targetCity;
-      handleIndiaSearch(targetCity);
-    });
-  });
-
-  // API Key section toggles
-  apiKeyToggleBtn.addEventListener('click', () => {
-    apiKeySection.classList.toggle('hidden');
-    if (!apiKeySection.classList.contains('hidden') && openWeatherApiKey) {
-      apiKeyInput.value = openWeatherApiKey;
-    }
-  });
-
-  saveApiKeyBtn.addEventListener('click', () => {
-    openWeatherApiKey = apiKeyInput.value.trim();
-    localStorage.setItem('openweather_api_key', openWeatherApiKey);
-    apiKeySection.classList.add('hidden');
-    showError('API Key saved! Fetching real-time weather...', false);
-
-    // Refresh current location
-    const currentText = cityName.textContent.split(',')[0].trim();
-    handleIndiaSearch(currentText || 'Hyderabad');
-  });
 }
 
 // =============================================================================
-// 5. Intelligent India-Focused Search
+// 4. India Search & Geocoding
 // =============================================================================
 
 function handleIndiaSearch(query) {
   const normalized = query.toLowerCase().trim();
 
-  // 1. Check exact match in India database
+  // 1. Check exact match in India locations registry
   const matched = INDIA_LOCATIONS.find((loc) => {
     if (loc.city.toLowerCase().includes(normalized)) return true;
     if (loc.state.toLowerCase() === normalized) return true;
@@ -282,30 +238,26 @@ function handleIndiaSearch(query) {
   });
 
   if (matched) {
-    loadWeatherForLocation(matched);
+    fetchAccurateIndianWeather(matched);
     return;
   }
 
-  // 2. If not in predefined list, geocode strictly inside India (country_code=IN)
+  // 2. Geocode custom place strictly restricted to India (country_code=IN)
   fetchWeatherForCustomIndianPlace(query);
 }
 
-/**
- * Geocode any Indian city/town/village using strict India country boundaries
- */
 async function fetchWeatherForCustomIndianPlace(placeName) {
   showLoading(true);
   hideError();
 
   try {
-    // Open-Meteo geocoding restricted to country_code=IN (India)
     const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(placeName)}&count=1&language=en&format=json&country_code=IN`;
     const res = await fetch(geoUrl);
-    if (!res.ok) throw new Error('Network error while locating Indian city.');
+    if (!res.ok) throw new Error('Network error while searching for city.');
 
     const data = await res.json();
     if (!data.results || data.results.length === 0) {
-      throw new Error(`"${placeName}" not found in India. Please verify spelling or select from the dropdown above.`);
+      throw new Error(`"${placeName}" not found in India. Please check spelling or select from the dropdown.`);
     }
 
     const place = data.results[0];
@@ -318,7 +270,7 @@ async function fetchWeatherForCustomIndianPlace(placeName) {
       lon: place.longitude,
     };
 
-    await loadWeatherForLocation(locationObj);
+    await fetchAccurateIndianWeather(locationObj);
   } catch (err) {
     showError(err.message || 'Unable to fetch weather. Please try again.');
   } finally {
@@ -327,90 +279,43 @@ async function fetchWeatherForCustomIndianPlace(placeName) {
 }
 
 // =============================================================================
-// 6. Accurate Weather Fetching & Rendering
+// 5. Accurate Weather Fetching & Rendering (IST)
 // =============================================================================
 
-async function loadWeatherForLocation(location) {
+async function fetchAccurateIndianWeather(location) {
   showLoading(true);
   hideError();
 
   try {
-    // If an OpenWeather API key is provided, use OpenWeather by coordinates
-    if (openWeatherApiKey && openWeatherApiKey.trim() !== '') {
-      const owmUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&units=metric&appid=${openWeatherApiKey}`;
-      const response = await fetch(owmUrl);
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FKolkata`;
+    const response = await fetch(url);
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Invalid OpenWeather API Key. Please verify key or leave empty for free live data.');
-        } else {
-          throw new Error('OpenWeather API error. Switching to live feed...');
-        }
-      }
-
-      const data = await response.json();
-      displayOpenWeatherData(data, location);
-    } else {
-      // Pinpoint accurate real-time meteorological API with Asia/Kolkata timezone
-      await fetchAccurateIndianWeather(location);
+    if (!response.ok) {
+      throw new Error('Unable to retrieve weather data.');
     }
+
+    const data = await response.json();
+    const current = data.current;
+    const isDay = current.is_day === 1;
+    const conditionMeta = mapIndianWeatherCode(current.weather_code, isDay);
+
+    displayWeatherData({
+      displayName: `${location.city}, ${location.state}`,
+      temp: Math.round(current.temperature_2m),
+      condition: conditionMeta.text,
+      icon: conditionMeta.icon,
+      feelsLike: Math.round(current.apparent_temperature),
+      tempMin: Math.round(data.daily.temperature_2m_min[0]),
+      tempMax: Math.round(data.daily.temperature_2m_max[0]),
+      humidity: Math.round(current.relative_humidity_2m),
+      windSpeed: (current.wind_speed_10m / 3.6).toFixed(1), // m/s
+      time: getIndianStandardTime(),
+    });
   } catch (err) {
-    console.warn('Weather fetch warning:', err);
-    // If OpenWeather fails, fallback seamlessly to direct live feed
-    try {
-      await fetchAccurateIndianWeather(location);
-    } catch (fallbackErr) {
-      showError(fallbackErr.message || 'Error connecting to weather service.');
-    }
+    showError(err.message || 'Error connecting to weather service.');
   } finally {
     showLoading(false);
   }
-}
-
-/**
- * Fetch weather configured with Asia/Kolkata (IST) timezone
- */
-async function fetchAccurateIndianWeather(location) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FKolkata`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error('Unable to retrieve weather data from meteorological service.');
-  }
-
-  const data = await response.json();
-  const current = data.current;
-  const isDay = current.is_day === 1;
-  const conditionMeta = mapIndianWeatherCode(current.weather_code, isDay);
-
-  displayWeatherData({
-    displayName: `${location.city}, ${location.state}`,
-    temp: Math.round(current.temperature_2m),
-    condition: conditionMeta.text,
-    icon: conditionMeta.icon,
-    feelsLike: Math.round(current.apparent_temperature),
-    tempMin: Math.round(data.daily.temperature_2m_min[0]),
-    tempMax: Math.round(data.daily.temperature_2m_max[0]),
-    humidity: Math.round(current.relative_humidity_2m),
-    windSpeed: (current.wind_speed_10m / 3.6).toFixed(1), // m/s
-    time: getIndianStandardTime(),
-  });
-}
-
-function displayOpenWeatherData(data, location) {
-  const weather = data.weather[0] || {};
-  displayWeatherData({
-    displayName: `${location.city}, ${location.state}`,
-    temp: Math.round(data.main.temp),
-    condition: weather.main || 'Clear',
-    icon: weather.icon || '01d',
-    feelsLike: Math.round(data.main.feels_like),
-    tempMin: Math.round(data.main.temp_min),
-    tempMax: Math.round(data.main.temp_max),
-    humidity: data.main.humidity,
-    windSpeed: data.wind.speed.toFixed(1),
-    time: getIndianStandardTime(),
-  });
 }
 
 /**
@@ -436,7 +341,7 @@ function displayWeatherData(info) {
 }
 
 // =============================================================================
-// 7. Browser Geolocation (Current Location in India)
+// 6. Browser Geolocation (Current Location in India)
 // =============================================================================
 
 function handleCurrentLocation() {
@@ -453,7 +358,6 @@ function handleCurrentLocation() {
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
 
-      // Reverse geocode to find Indian city and state
       try {
         const revUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
         const res = await fetch(revUrl);
@@ -467,15 +371,14 @@ function handleCurrentLocation() {
           detectedState = addr.state || 'India';
         }
 
-        await loadWeatherForLocation({
+        await fetchAccurateIndianWeather({
           city: detectedCity,
           state: detectedState,
           lat: lat,
           lon: lon,
         });
       } catch {
-        // Fallback with raw coordinates
-        await loadWeatherForLocation({
+        await fetchAccurateIndianWeather({
           city: 'My Location',
           state: 'India',
           lat: lat,
@@ -496,7 +399,7 @@ function handleCurrentLocation() {
 }
 
 // =============================================================================
-// 8. Helper Functions
+// 7. Helper Functions
 // =============================================================================
 
 function getIndianStandardTime() {
@@ -538,18 +441,9 @@ function showLoading(isLoading) {
   searchBtn.disabled = isLoading;
 }
 
-function showError(msg, isError = true) {
+function showError(msg) {
   errorMessage.textContent = msg;
   errorBanner.classList.remove('hidden');
-  if (!isError) {
-    errorBanner.style.background = 'rgba(56, 189, 248, 0.2)';
-    errorBanner.style.borderColor = 'rgba(56, 189, 248, 0.4)';
-    errorBanner.style.color = '#bae6fd';
-  } else {
-    errorBanner.style.background = 'rgba(239, 68, 68, 0.2)';
-    errorBanner.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-    errorBanner.style.color = '#fca5a5';
-  }
 }
 
 function hideError() {
@@ -557,7 +451,7 @@ function hideError() {
 }
 
 /**
- * Accurate WMO Weather Code to Condition mapping
+ * WMO Weather Code to Condition & Icon
  */
 function mapIndianWeatherCode(code, isDay) {
   const s = isDay ? 'd' : 'n';
